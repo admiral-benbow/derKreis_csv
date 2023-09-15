@@ -62,27 +62,28 @@ def aperture_diff_finder(start_time: str, end_time: str, aperture: int | float,
     heads_flag = True
 
     with open(csv_table) as table:
-        reader = csv.reader(table, delimiter=";")
-        csv_headers = reader.__next__()    # пропускаем и сохраняем заголовки
+        with open(found_table, "w", encoding="utf-8") as new_table:
+            reader = csv.reader(table, delimiter=";")
+            writer = csv.writer(new_table, delimiter=";", lineterminator="\n")
 
-        for row in reader:
-            row_time = datetime_conv(row[1])
-            if start_time <= row_time <= end_time:  # проверяем соответствие времени
-                if not prev_row:
-                    prev_row = row[2:]
-                    continue
+            csv_headers = reader.__next__()    # пропускаем и сохраняем заголовки
 
-                for index, param in enumerate(row[2:]):     # итерируемся по параметрам ряда
-                    if fabs(float(param.replace(",", ".")) - float(prev_row[index].replace(",", "."))) > aperture:
-                        with open(found_table, "a", encoding="utf-8") as new_table:
-                            writer = csv.writer(new_table, delimiter=";", lineterminator="\n")
+            for row in reader:
+                row_time = datetime_conv(row[1])
+                if start_time <= row_time <= end_time:  # проверяем соответствие времени
+                    if not prev_row:
+                        prev_row = row[2:]
+                        continue
+
+                    for index, param in enumerate(row[2:]):     # итерируемся по параметрам ряда
+                        if fabs(float(param.replace(",", ".")) - float(prev_row[index].replace(",", "."))) > aperture:
                             if heads_flag:
                                 writer.writerow(csv_headers)
                                 heads_flag = False
 
                             writer.writerow(row)
-                        break
-                prev_row = row[2:]
+                            break
+                    prev_row = row[2:]
 
     func_finish = time.time()
     print(f"Затраченное время на работу функции: {func_finish - func_start}")
@@ -94,8 +95,13 @@ if __name__ == '__main__':
                          aperture=125,
                          csv_table="table.csv",
                          found_table="found_rows.csv")
+    aperture_diff_finder(start_time='18 августа 2022 г. 9:00:00.002 мсек',
+                         end_time='18 августа 2022 г. 10:00:00.008 мсек',
+                         aperture=125,
+                         csv_table="table.csv",
+                         found_table="new_found_rows.csv")
     aperture_diff_finder(start_time='18 августа 2022 г. 7:58:32.002 мсек',
-                         end_time=' dsa  dsa das  das',
+                         end_time=' dsa  dsa das  das',  # неправильное время (очевидно)
                          aperture=125,
                          csv_table="table.csv",
                          found_table="found_rows.csv")
